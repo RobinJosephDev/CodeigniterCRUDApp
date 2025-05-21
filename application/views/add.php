@@ -8,78 +8,52 @@
 
 <body>
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-md-offset-3">
+        <div class="col-md-6 col-md-offset-3">
 
-                <h3 class="text-center">Add User</h3>
-                <?php if ($this->session->flashdata('success')) : ?>
-                    <div class="alert alert-success">
-                        <?= $this->session->flashdata('success'); ?>
-                    </div>
-                <?php endif; ?>
+            <h3 class="text-center">Add User</h3>
 
-                <!-- Show validation errors -->
-                <?php if (validation_errors()) : ?>
-                    <div class="alert alert-danger">
-                        <?php echo validation_errors(); ?>
-                    </div>
-                <?php endif; ?>
+            <?php if ($this->session->flashdata('success')) : ?>
+                <div class="alert alert-success"><?= $this->session->flashdata('success'); ?></div>
+            <?php endif; ?>
 
-                <?php if (isset($upload_error)) : ?>
-                    <div class="alert alert-danger">
-                        <?php echo $upload_error; ?>
-                    </div>
-                <?php endif; ?>
+            <?= validation_errors('<div class="alert alert-danger">', '</div>'); ?>
+            <?php if (isset($upload_error)) : ?>
+                <div class="alert alert-danger"><?= $upload_error; ?></div>
+            <?php endif; ?>
 
+            <?= form_open_multipart('register/add'); ?>
 
-                <?php echo form_open_multipart('register/add'); ?>
+            <?php
+            $fields = [
+                'first_name' => 'First Name',
+                'last_name'  => 'Last Name',
+                'address'    => 'Address',
+                'email'      => 'Email',
+                'password'   => 'Password',
+                'mobile'     => 'Mobile'
+            ];
 
+            foreach ($fields as $name => $label) :
+                $type = ($name === 'password') ? 'password' : (($name === 'email') ? 'email' : 'text');
+            ?>
                 <div class="form-group">
-                    <label for="txtFname">First Name</label>
-                    <input type="text" class="form-control" name="txtFname" value="<?php echo set_value('txtFname'); ?>">
+                    <label><?= $label ?></label>
+                    <input type="<?= $type ?>" class="form-control" name="<?= $name ?>" value="<?= set_value($name) ?>">
                 </div>
+            <?php endforeach; ?>
 
-                <div class="form-group">
-                    <label for="txtLname">Last Name</label>
-                    <input type="text" class="form-control" name="txtLname" value="<?php echo set_value('txtLname'); ?>">
-                </div>
-
-                <div class="form-group">
-                    <label for="txtAddress">Address</label>
-                    <input type="text" class="form-control" name="txtAddress" value="<?php echo set_value('txtAddress'); ?>">
-                </div>
-
-                <div class="form-group">
-                    <label for="txtEmail">Email</label>
-                    <input type="email" class="form-control" name="txtEmail" value="<?php echo set_value('txtEmail'); ?>">
-                </div>
-
-                <div class="form-group">
-                    <label for="txtPassword">Password</label>
-                    <input type="password" class="form-control" name="txtPassword">
-                </div>
-
-                <div class="form-group">
-                    <label for="txtMobile">Mobile</label>
-                    <input type="text" class="form-control" name="txtMobile" value="<?php echo set_value('txtMobile'); ?>">
-                </div>
-
-                <div class="form-group">
-                    <label for="profile_pic">Profile Picture</label>
-                    <input type="file" name="profile_pic" class="form-control">
-                </div>
-
-                <div class="form-group text-center">
-                    <button type="submit" name="btnadd" class="btn btn-primary btn-lg">Add User</button>
-                </div>
-
-                <?php echo form_close(); ?>
-
-                <div class="form-group text-center">
-                    <a href="<?= base_url('register') ?>" class="btn btn-default btn-lg">Back to Users</a>
-                </div>
-
+            <div class="form-group">
+                <label>Profile Picture</label>
+                <input type="file" name="profile_pic" class="form-control">
             </div>
+
+            <div class="form-group text-center">
+                <button type="submit" class="btn btn-primary btn-lg">Add User</button>
+                <a href="<?= base_url('register') ?>" class="btn btn-default btn-lg">Back</a>
+            </div>
+
+            <?= form_close(); ?>
+
         </div>
     </div>
 </body>
