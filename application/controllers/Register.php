@@ -53,28 +53,23 @@ class Register extends CI_Controller
 
     public function add()
     {
+        // Set validation rules
         $this->form_validation->set_rules('txtFname', 'First Name', 'required');
         $this->form_validation->set_rules('txtLname', 'Last Name', 'required');
         $this->form_validation->set_rules('txtEmail', 'Email', 'required|valid_email');
+        $this->form_validation->set_rules('txtPassword', 'Password', 'required|min_length[6]');
+        $this->form_validation->set_rules('txtMobile', 'Mobile', 'required|regex_match[/^[0-9]{10}$/]');
 
         if ($this->form_validation->run() == FALSE) {
+            $this->load->view('add');
+        } else {
+            // Upload config
             $config['upload_path'] = './uploads/';
             $config['allowed_types'] = 'jpg|jpeg|png|gif';
             $config['max_size'] = 2048;
-            $this->load->library('upload', $config);
-
-            $profile_pic = null;
-            if ($this->upload->do_upload('profile_pic')) {
-                $upload_data = $this->upload->data();
-                $profile_pic = $upload_data['file_name'];
-            }
-
-            $this->load->view('add');
-        } else {
-            // File upload config
-            $config['upload_path'] = './uploads/';
-            $config['allowed_types'] = 'jpg|jpeg|png|gif';
-            $config['max_size'] = 2048; // 2MB
+            $config['detect_mime']   = TRUE;
+            $config['overwrite']     = FALSE;
+            $config['encrypt_name']  = TRUE;
             $this->load->library('upload', $config);
 
             $profile_pic = '';
@@ -89,25 +84,27 @@ class Register extends CI_Controller
                 }
             }
 
-            // ✅ Hash the password before saving
+            // Hash password
             $password = password_hash($this->input->post('txtPassword'), PASSWORD_BCRYPT);
 
+            // Prepare data
             $arrData = [
-                'first_name' => $this->input->post('txtFname'),
-                'last_name' => $this->input->post('txtLname'),
-                'address' => $this->input->post('txtAddress'),
-                'email' => $this->input->post('txtEmail'),
-                'password' => $password, // ✅ hashed password
-                'mobile' => $this->input->post('txtMobile'),
-                'profile_pic' => $profile_pic
+                'first_name'   => $this->input->post('txtFname'),
+                'last_name'    => $this->input->post('txtLname'),
+                'address'      => $this->input->post('txtAddress'),
+                'email'        => $this->input->post('txtEmail'),
+                'password'     => $password,
+                'mobile'       => $this->input->post('txtMobile'),
+                'profile_pic'  => $profile_pic
             ];
 
-            $insert = $this->Register_model->insert($arrData);
-            if ($insert) {
+            // Save to DB
+            if ($this->Register_model->insert($arrData)) {
                 $this->session->set_flashdata('success', 'User added successfully!');
                 redirect('register/add');
             } else {
-                $this->load->view('add');
+                $data['error'] = 'Failed to add user.';
+                $this->load->view('add', $data);
             }
         }
     }
@@ -115,10 +112,8 @@ class Register extends CI_Controller
     public function edit($id)
     {
         $user = $this->Register_model->getUserById($id);
-
         if (empty($user)) {
             show_error('User not found', 404);
-            return;
         }
 
         $data['user'] = $user;
@@ -127,45 +122,61 @@ class Register extends CI_Controller
 
     public function update($id)
     {
-        $this->load->library('upload');
+        $this->form_validation->set_rules('first_name', 'First Name', 'required');
+        $this->form_validation->set_rules('last_name', 'Last Name', 'required');
+        $this->form_validation->set_rules('address', 'Address', 'required');
+        $this->form_validation->set_rules('email', 'Email', 'required|valid_email');
+        $this->form_validation->set_rules('password', 'Password', 'required|min_length[6]');
+        $this->form_validation->set_rules('mobile', 'Mobile', 'required|regex_match[/^[0-9]{10}$/]');
 
-        $data = [
-            'first_name' => $this->input->post('first_name'),
-            'last_name'  => $this->input->post('last_name'),
-            'address'    => $this->input->post('address'),
-            'email'      => $this->input->post('email'),
-            'password'   => $this->input->post('password'),
-            'mobile'     => $this->input->post('mobile')
-        ];
-
-        // Handle profile picture upload
-        if (!empty($_FILES['profile_pic']['name'])) {
-            $config['upload_path']   = './uploads/';
-            $config['allowed_types'] = 'jpg|jpeg|png|gif';
-            $config['max_size']      = 2048; // 2MB
-            $config['encrypt_name']  = TRUE;
-
-            $this->upload->initialize($config);
-
-            if ($this->upload->do_upload('profile_pic')) {
-                $uploadData = $this->upload->data();
-                $data['profile_pic'] = $uploadData['file_name'];
-            } else {
-                $this->session->set_flashdata('error', $this->upload->display_errors());
-                redirect('register/edit/' . $id);
-                return;
-            }
-        } else {
-            // If no new file is uploaded, keep the existing one
-            $data['profile_pic'] = $this->input->post('existing_pic');
+        if ($this->form_validation->run() == FALSE) {
+            $data['user'] = $this->Register_model->getUserById($id);
+            $this->load->view('edit', $data);
+            return;
         }
 
-        // Update user
-        if ($this->Register_model->updateUser($id, $data)) {
-            $this->session->set_flashdata('success', 'User updated successfully');
+        // File upload config
+        $config['upload_path']   = './uploads/';
+        $config['allowed_types'] = 'jpg|jpeg|png|gif';
+        $config['max_size']      = 2048;
+        $config['encrypt_name']  = TRUE;
+        $config['detect_mime']   = TRUE;
+        $config['overwrite']     = FALSE;
+        $this->load->library('upload', $config);
+
+        $profile_pic = $this->input->post('existing_pic'); // default to existing
+
+        if (!empty($_FILES['profile_pic']['name'])) {
+            if ($this->upload->do_upload('profile_pic')) {
+                $uploadData = $this->upload->data();
+                $profile_pic = $uploadData['file_name'];
+            } else {
+                $data['user'] = $this->Register_model->getUserById($id);
+                $data['upload_error'] = $this->upload->display_errors();
+                $this->load->view('edit', $data);
+                return;
+            }
+        }
+
+        $password = password_hash($this->input->post('password'), PASSWORD_BCRYPT);
+
+        $arrData = [
+            'first_name'   => $this->input->post('first_name'),
+            'last_name'    => $this->input->post('last_name'),
+            'address'      => $this->input->post('address'),
+            'email'        => $this->input->post('email'),
+            'password'     => $password,
+            'mobile'       => $this->input->post('mobile'),
+            'profile_pic'  => $profile_pic
+        ];
+
+        if ($this->Register_model->updateUser($id, $arrData)) {
+            $this->session->set_flashdata('success', 'User updated successfully!');
             redirect('register');
         } else {
-            show_error('Update failed');
+            $data['user'] = $this->Register_model->getUserById($id);
+            $data['error'] = 'Failed to update user.';
+            $this->load->view('edit', $data);
         }
     }
 

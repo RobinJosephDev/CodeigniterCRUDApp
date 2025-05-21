@@ -25,11 +25,12 @@
                     </div>
                 <?php endif; ?>
 
-                <?php if (isset($error)) : ?>
+                <?php if (isset($upload_error)) : ?>
                     <div class="alert alert-danger">
-                        <?php echo $error; ?>
+                        <?php echo $upload_error; ?>
                     </div>
                 <?php endif; ?>
+
 
                 <?php echo form_open_multipart('register/add'); ?>
 
