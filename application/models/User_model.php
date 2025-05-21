@@ -3,19 +3,25 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class User_model extends CI_Model
 {
-
     public function __construct()
     {
         parent::__construct();
-        $this->load->database(); // ✅ Load the database here
+        $this->load->database();
     }
 
-    public function validate_user($first_name, $password)
+    public function validate_user($username, $password)
     {
-        $query = $this->db->where('first_name', $first_name)
-            ->where('password', $password) // Note: not secure! See below.
-            ->get('register');
+        // Fetch user by username
+        $query = $this->db->where('username', $username)
+            ->get('register'); // Replace 'register' with actual table if different
 
-        return $query->row_array();
+        $user = $query->row_array();
+
+        // Verify password if user exists
+        if ($user && password_verify($password, $user['password'])) {
+            return $user; // Return full user array
+        }
+
+        return false; // Invalid credentials
     }
 }

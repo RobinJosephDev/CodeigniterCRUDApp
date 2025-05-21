@@ -17,8 +17,7 @@
                         <td colspan="5" align="right"><a href="<?= site_url('login/logout') ?>">Logout</a></td>
                     </tr>
                     <tr>
-                        <td>First Name</td>
-                        <td>Last Name</td>
+                        <td>Username</td>
                         <td>Email</td>
                         <td>Mobile</td>
                         <td>Profile Pic</td>
@@ -28,8 +27,7 @@
                     foreach ($register_detail as $rg) {
                     ?>
                         <tr>
-                            <td><?php echo $rg['first_name']; ?></td>
-                            <td><?php echo $rg['last_name']; ?></td>
+                            <td><?php echo $rg['username']; ?></td>
                             <td><?php echo $rg['email']; ?></td>
                             <td><?php echo $rg['mobile']; ?></td>
                             <td>

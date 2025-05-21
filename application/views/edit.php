@@ -34,12 +34,10 @@
 
     <?php
     $fields = [
-        'first_name' => 'First Name',
-        'last_name'  => 'Last Name',
-        'address'    => 'Address',
+        'username' => 'Username',
         'email'      => 'Email',
         'password'   => 'Password',
-        'mobile'     => 'Mobile',
+        'mobile'     => 'Mobile'
     ];
 
     foreach ($fields as $name => $label) :

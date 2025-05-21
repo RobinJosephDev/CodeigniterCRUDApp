@@ -9,6 +9,11 @@ class Register extends CI_Controller
         $this->load->helper(['url', 'form']);
         $this->load->library(['form_validation', 'session', 'pagination', 'upload']);
         $this->load->model('Register_model');
+
+        // ✅ Redirect to login if not logged in
+        if (!$this->session->userdata('logged_in')) {
+            redirect('login');
+        }
     }
 
     public function index()
@@ -104,21 +109,18 @@ class Register extends CI_Controller
             return;
         }
 
-        // If new file uploaded, delete the old one
         if ($new_upload) {
             $profile_pic = $new_upload;
 
-            // Delete old image file from uploads folder
             if (!empty($existing_pic)) {
                 $old_file_path = FCPATH . 'uploads/' . $existing_pic;
                 if (file_exists($old_file_path)) {
-                    unlink($old_file_path); // 🔥 delete old image
+                    unlink($old_file_path);
                 }
             }
         } else {
             $profile_pic = $existing_pic;
         }
-
 
         $arrData = $this->_collect_post_data($profile_pic, true);
 
@@ -146,13 +148,10 @@ class Register extends CI_Controller
 
     private function _set_validation_rules($is_update = false)
     {
-        $this->form_validation->set_rules('first_name', 'First Name', 'required');
-        $this->form_validation->set_rules('last_name', 'Last Name', 'required');
-        $this->form_validation->set_rules('address', 'Address', 'required');
+        $this->form_validation->set_rules('username', 'Username', 'required');
         $this->form_validation->set_rules('email', 'Email', 'required|valid_email');
         $this->form_validation->set_rules('mobile', 'Mobile', 'required|regex_match[/^[0-9]{10}$/]');
 
-        // For update, password is optional; for add, required
         $password_rule = $is_update ? 'min_length[6]' : 'required|min_length[6]';
         $this->form_validation->set_rules('password', 'Password', $password_rule);
     }
@@ -185,9 +184,7 @@ class Register extends CI_Controller
         $hashed_password = $is_update && empty($password) ? null : password_hash($password, PASSWORD_BCRYPT);
 
         $data = [
-            'first_name'   => $this->input->post('first_name'),
-            'last_name'    => $this->input->post('last_name'),
-            'address'      => $this->input->post('address'),
+            'username'     => $this->input->post('username'),
             'email'        => $this->input->post('email'),
             'mobile'       => $this->input->post('mobile'),
             'profile_pic'  => $profile_pic,
